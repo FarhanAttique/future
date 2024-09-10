@@ -1,0 +1,144 @@
+{%
+    var report_columns = report.get_columns_for_print();
+    report_columns = report_columns.filter(col => !col.hidden);
+
+    if (report_columns.length > 14) {
+        frappe.throw(__("Too many columns."));
+    }
+
+    var start_year = new Date(filters.from_date).getFullYear();
+    var end_year = new Date(filters.to_date).getFullYear();
+%}
+
+<style>
+    body, table {
+        font-size: 10px !important;
+    }
+
+    .financial-statements-important td {
+        font-weight: bold;
+    }
+
+    .financial-statements-blank-row td {
+        height: 37px;
+    }
+
+    .print-format-gutter .print-format.landscape table.table.table-bordered tr td span {
+        padding-left: 0!important;
+    }
+    .print-format-gutter .print-format.landscape h6 {
+        background-color: red;
+        display: none;
+    }
+    .print-format-gutter .print-format.landscape table.table.table-bordered thead th {
+        font-weight: bold!important;
+        color: #000000!important;
+    }
+    .print-format-gutter .print-format.landscape h6 + hr {
+        display: none;
+    }
+    .print-format-gutter .print-format.landscape hr {
+        margin: 5px 0;
+    }
+    @page  {
+        margin: 10px;
+    }
+    .print-format-gutter .print-format.landscape table.table.table-bordered tr td span[style="padding-left: 4em"] a {
+        font-weight: bold;
+    }
+
+    /* Adjusting font size to 10px */
+    .report-main-div, h2, h3, h5, table {
+        font-size: 18px !important;
+    }
+
+    /* Ensure all table contents use 10px font */
+    .table.table-bordered td, .table.table-bordered th {
+        font-size: 10px !important;
+    }
+
+</style>
+  
+<div class="report-main-div">
+
+    <div id="header-html" class="hidden-pdf">
+        <div class="letter-head">
+            <div style="text-align: left;">
+                <img src="/files/fs-head63f69b.jpg" alt="Report-LH" height="" style="height: px;">
+            </div>
+        </div>    
+    </div>
+
+    <h2 class="text-center">{%= __(report.report_name) %}</h2>
+
+    <div class="top-head">
+        <h3 class="text-center">{%= filters.company %}</h3>
+
+        {% if 'cost_center' in filters %}
+        <h3 class="text-center">{%= filters.cost_center %}</h3>
+        {% endif %}
+
+        <h3 class="text-center">Year: {%= filters.to_fiscal_year %}</h3>
+
+        {% if (filters.from_date) { %}
+        <h5 class="text-center">
+            {%= frappe.datetime.str_to_user(filters.from_date) %} - {%= frappe.datetime.str_to_user(filters.to_date) %}
+        </h5>
+        {% } %}
+    </div>
+
+    <hr>
+    <table class="table table-bordered">
+        <thead>
+            <tr>
+                <th style="width: {%= 100 - (report_columns.length - 1) * 13 %}%"></th>
+                {% for (let i = 1, l = report_columns.length; i < l; i++) { %}
+                    <th class="text-right">
+                        {%= report_columns[i].label.split(" ")[0] %} <!-- Display only the month name -->
+                    </th>
+                {% } %}
+                <!-- Add "Total" column header -->
+                <th class="text-right">Total</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for (let j = 0, k = data.length; j < k; j++) { %}
+                {%
+                    var row = data[j];
+                    var row_class = data[j].parent_account ? "" : "financial-statements-important";
+                    row_class += data[j].account_name ? "" : " financial-statements-blank-row";
+                    var total = 0; // Reset total for each row
+                %}
+                <tr class="{%= row_class %}">
+                    <td>
+                        <span style="padding-left: {%= cint(data[j].indent) * 2 %}em">{%= row.account_name %}</span>
+                    </td>
+                    {% for (let i = 1, l = report_columns.length; i < l; i++) { %}
+                        <td class="text-right">
+                            {% const fieldname = report_columns[i].fieldname; %}
+                            {% if (!is_null(row[fieldname])) { %}
+                                {%= frappe.format(row[fieldname], report_columns[i], {}, row) %} <!-- Show only the formatted value -->
+                                <!-- {%= total += row[fieldname] ? parseFloat(row[fieldname]) : 0 %} <!-- Calculate total without displaying the raw value -->
+                            {% } %}
+                        </td>
+                    {% } %}
+                    <!-- Display the calculated total for the row in the final Total column -->
+                    <td class="text-right">
+                        <strong>{%= frappe.format(total, {fieldtype: "Currency"}, {}, row) %}</strong> <!-- Display total -->
+                    </td>
+                </tr>
+            {% } %}
+        </tbody>
+    </table>
+
+    <p class="text-right text-muted">
+        Printed On {%= frappe.datetime.str_to_user(frappe.datetime.get_datetime_as_string()) %}
+    </p>
+
+    <div id="footer-html" class="visible-pdf">
+        <div class="letter-head-footer">
+            <img src="/files/fsfooter.png">
+        </div>
+    </div>
+
+</div>

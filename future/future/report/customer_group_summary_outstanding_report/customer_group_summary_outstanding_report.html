@@ -1,0 +1,74 @@
+{%
+    var report_columns = report.get_columns_for_print();
+    report_columns = report_columns.filter(col => !col.hidden);
+
+    if (report_columns.length > 14) {
+        frappe.throw(__("Too many columns."));
+    }
+
+    var customer_group = filters.customer_group;
+    var outstanding_amount = report.data.length > 0 ? report.data[0]["outstanding_amount"] : 0;
+    
+%}
+<style>
+    body, p, div {
+        color: #000000 !important;
+        font-family: Arial, sans-serif !important;
+        font-weight: 500;
+    }
+    table tr td {
+        font-family: Arial, sans-serif !important;
+        font-weight: 500;
+    }
+    table {
+        margin-bottom: 0;
+    }
+    body .print-format .row:not(.section-break) {
+        margin-top: 0 !important;
+    }
+    .letter-div p {
+        margin-bottom: 25px;
+        text-align: justify;
+        font-size: 18px;
+        line-height: 28px;
+    }
+</style>
+
+<div class="letter-div">
+    <br><br>
+    <p>
+        Subject: Outstanding Payment Request
+    </p>
+
+    <p>
+        Dear {%= customer_group %},
+    </p>
+    
+    <p>
+        We are writing to bring your attention to the outstanding balance on your account with <b>Food Shack Food Supplies Company W.L.L</b>.
+        According to our records, the payment of <b>Rs {%= outstanding_amount %}</b> till Date <b>{%= filters.posting_date %}</b> remains unpaid.
+    </p>
+    
+    <p>
+        We kindly request that you settle the outstanding amount.
+    </p>
+    
+    <p>
+        Thank you for your prompt attention to this matter. We look forward to continuing our successful business relationship.
+    </p>
+
+    <p>
+        <b><u>Please find the payment details below for your convenience:</u></b>
+    </p>
+    
+    <p>
+        Bank Name: [Your Bank Name]<br>
+        Account Name: [Your Account Name]<br>
+        Account Number: [Your Account Number]<br>
+        SWIFT/BIC Code: [SWIFT/BIC Code]
+    </p>
+    
+    <p>
+        Sincerely,
+    </p>
+</div>
